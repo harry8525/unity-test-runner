@@ -1,14 +1,25 @@
 {{#runs}}
-
+{{#if (shouldRender failed)}}
 <details><summary>{{summary}}</summary>
 
 {{#suites}}
+{{#if (shouldRender failed)}}
 * {{summary}}
 {{#tests}}
+  {{#if (shouldRender result)}}
   * {{summary}}
+  {{#if annotation}}
+  {{#if annotation.message}}
+  {{indent annotation.message}}
+  {{/if}}
+  {{#if annotation.raw_details}}
+  {{indent annotation.raw_details}}
+  {{/if}}
+  {{/if}}
 {{/tests}}
+{{/if}}
 {{/suites}}
 
 </details>
-
+{{/if}}
 {{/runs}}

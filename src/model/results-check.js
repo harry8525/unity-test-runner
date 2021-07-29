@@ -6,6 +6,17 @@ import Handlebars from 'handlebars';
 import ResultsParser from './results-parser';
 import { RunMeta } from './ts/results-meta.ts';
 
+// The max size to for output api request
+// the true limit is 65535 but leaving some buffer
+const maxCheckOutputSize = 65000;
+
+function isOutputToBig(output) {
+  return (
+    output.title.length + output.summary.length + output.text.length + output.annotations.length >=
+    maxCheckOutputSize
+  );
+}
+
 class ResultsCheck {
   static async createCheck(artifactsPath, githubToken, checkName) {
     // Validate input
@@ -67,14 +78,13 @@ class ResultsCheck {
       annotations: annotations.slice(0, 50),
     };
 
-    if (
-      output.title.length +
-        output.summary.length +
-        output.text.length +
-        output.annotations.length >=
-      65000
-    ) {
-      output.text = `Output truncated due to size limits please open the text log for details`;
+    if (isOutputToBig(output)) {
+      core.info('Output larger than check api limit trying to display only failures');
+      output.text = await ResultsCheck.renderDetails(runs, true);
+      if (isOutputToBig(output)) {
+        core.info('Output larger than check api limit, truncating response');
+        output.text = `Output truncated due to api size limit please open the log to see all the test results`;
+      }
     }
 
     // Call GitHub API
@@ -101,19 +111,27 @@ class ResultsCheck {
   }
 
   static async renderSummary(runMetas) {
-    return ResultsCheck.render(`${__dirname}/../views/results-check-summary.hbs`, runMetas);
+    return ResultsCheck.render(`${__dirname}/../views/results-check-summary.hbs`, runMetas, false);
   }
 
-  static async renderDetails(runMetas) {
-    return ResultsCheck.render(`${__dirname}/../views/results-check-details.hbs`, runMetas);
+  static async renderDetails(runMetas, onlyRenderFailures) {
+    return ResultsCheck.render(
+      `${__dirname}/../views/results-check-details.hbs`,
+      runMetas,
+      onlyRenderFailures,
+    );
   }
 
-  static async render(viewPath, runMetas) {
+  static async render(viewPath, runMetas, onlyRenderFailures) {
     Handlebars.registerHelper('indent', toIndent =>
       toIndent
         .split('\n')
         .map(s => `        ${s.replace('/github/workspace/', '')}`)
         .join('\n'),
+    );
+    Handlebars.registerHelper(
+      'shouldRender',
+      result => !onlyRenderFailures || result === 'Failed' || result > 0,
     );
     const source = await fs.promises.readFile(viewPath, 'utf8');
     const template = Handlebars.compile(source);

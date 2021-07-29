@@ -67,6 +67,16 @@ class ResultsCheck {
       annotations: annotations.slice(0, 50),
     };
 
+    if (
+      output.title.length +
+        output.summary.length +
+        output.text.length +
+        output.annotations.length >=
+      65000
+    ) {
+      output.text = `Output truncated due to size limits please open the text log for details`;
+    }
+
     // Call GitHub API
     await ResultsCheck.requestGitHubCheck(githubToken, checkName, output);
     return runSummary.failed;

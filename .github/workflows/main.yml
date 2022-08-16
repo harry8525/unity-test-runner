@@ -13,15 +13,15 @@ jobs:
     name: Tests
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-node@v2
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
         with:
           node-version: 12.x
       - run: yarn
       - run: yarn lint
       - run: yarn test
       - run: yarn build || { echo "build command should always succeed" ; exit 61; }
-      - run: yarn build --quiet && git diff --quiet action || { echo "ERROR - index.js is different from repository version. Forgot to run `yarn build`?" ; exit 62; }
+  #      - run: yarn build --quiet && git diff --quiet action || { echo "ERROR - index.js is different from repository version. Forgot to run `yarn build`?" ; exit 62; }
 
   testAllModesLikeInTheReadme:
     name: Test in ${{ matrix.testMode }} on version ${{ matrix.unityVersion }}
@@ -41,14 +41,14 @@ jobs:
       #         Checkout        #
       ###########################
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           lfs: true
 
       ###########################
       #          Cache          #
       ###########################
-      - uses: actions/cache@v2
+      - uses: actions/cache@v3
         with:
           path: ${{ matrix.projectPath }}/Library
           key: Library-${{ matrix.projectPath }}
@@ -62,7 +62,7 @@ jobs:
           testMode: ${{ matrix.testMode }}
           artifactsPath: ${{ matrix.testMode }}-artifacts
           customParameters: -profile SomeProfile -someBoolean -someValue exampleValue
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         with:
           name: Test results for ${{ matrix.testMode }}
           path: ${{ steps.tests.outputs.artifactsPath }}
@@ -82,14 +82,14 @@ jobs:
       ###########################
       #         Checkout        #
       ###########################
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           lfs: true
 
       ###########################
       #          Cache          #
       ###########################
-      - uses: actions/cache@v1.1.0
+      - uses: actions/cache@v3
         with:
           path: ${{ matrix.projectPath }}/Library
           key: Library-${{ matrix.projectPath }}-${{ matrix.targetPlatform }}
@@ -105,14 +105,23 @@ jobs:
           projectPath: ${{ matrix.projectPath }}
           unityVersion: ${{ matrix.unityVersion }}
           testMode: all
+          coverageOptions: 'generateAdditionalMetrics;generateHtmlReport;generateBadgeReport;assemblyFilters:+MyScripts'
           # Test implicit artifactsPath, by not setting it
 
       # Upload artifacts
       - name: Upload test results
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: Test results (all)
           path: ${{ steps.allTests.outputs.artifactsPath }}
+          retention-days: 14
+
+      # Upload coverage
+      - name: Upload coverage results
+        uses: actions/upload-artifact@v3
+        with:
+          name: Coverage results (all)
+          path: ${{ steps.allTests.outputs.coveragePath }}
           retention-days: 14
 
   testRunnerInEditMode:
@@ -129,14 +138,14 @@ jobs:
       ###########################
       #         Checkout        #
       ###########################
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           lfs: true
 
       ###########################
       #          Cache          #
       ###########################
-      - uses: actions/cache@v1.1.0
+      - uses: actions/cache@v3
         with:
           path: ${{ matrix.projectPath }}/Library
           key: Library-${{ matrix.projectPath }}-${{ matrix.targetPlatform }}
@@ -156,10 +165,18 @@ jobs:
 
       # Upload artifacts
       - name: Upload test results
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: Test results (edit mode)
           path: ${{ steps.editMode.outputs.artifactsPath }}
+          retention-days: 14
+
+      # Upload coverage
+      - name: Upload coverage results
+        uses: actions/upload-artifact@v3
+        with:
+          name: Coverage results (edit mode)
+          path: ${{ steps.editMode.outputs.coveragePath }}
           retention-days: 14
 
   testRunnerInPlayMode:
@@ -176,14 +193,14 @@ jobs:
       ###########################
       #         Checkout        #
       ###########################
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           lfs: true
 
       ###########################
       #          Cache          #
       ###########################
-      - uses: actions/cache@v1.1.0
+      - uses: actions/cache@v3
         with:
           path: ${{ matrix.projectPath }}/Library
           key: Library-${{ matrix.projectPath }}-${{ matrix.targetPlatform }}
@@ -203,10 +220,18 @@ jobs:
 
       # Upload artifacts
       - name: Upload test results
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: Test results (play mode)
           path: ${{ steps.playMode.outputs.artifactsPath }}
+          retention-days: 14
+
+      # Upload coverage
+      - name: Upload coverage results
+        uses: actions/upload-artifact@v3
+        with:
+          name: Coverage results (play mode)
+          path: ${{ steps.playMode.outputs.coveragePath }}
           retention-days: 14
 
   testEachModeSequentially:
@@ -223,14 +248,14 @@ jobs:
       ###########################
       #         Checkout        #
       ###########################
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           lfs: true
 
       ###########################
       #          Cache          #
       ###########################
-      - uses: actions/cache@v1.1.0
+      - uses: actions/cache@v3
         with:
           path: ${{ matrix.projectPath }}/Library
           key: Library-${{ matrix.projectPath }}-${{ matrix.targetPlatform }}
@@ -258,7 +283,7 @@ jobs:
 
       # Upload combined artifacts
       - name: Upload combined test results
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: Test results (combined)
           path: artifacts/

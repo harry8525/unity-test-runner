@@ -13,25 +13,33 @@ inputs:
   projectPath:
     required: false
     description: 'Path to the Unity project to be tested.'
+  customParameters:
+    required: false
+    description: 'Extra parameters to configure the Unity editor run.'
   testMode:
     required: false
     default: 'all'
     description: 'The type of tests to be run by the test runner.'
+  coverageOptions:
+    required: false
+    default: 'generateAdditionalMetrics;generateHtmlReport;generateBadgeReport'
+    description: 'Optional coverage parameters for the -coverageOptions argument.'
   artifactsPath:
     required: false
     default: 'artifacts'
     description: 'Path where test artifacts should be stored.'
-  useNetworkHost:
+  useHostNetwork:
     required: false
     default: false
-    description: 'Initialises Docker using the hosts network.'
-  customParameters:
-    required: false
-    description: 'Extra parameters to configure the Unity editor run.'
+    description: 'Initialises Docker using the host network.'
   sshAgent:
     required: false
     default: ''
-    description: 'SSH Agent path to forward to the container'
+    description: 'SSH Agent path to forward to the container.'
+  gitPrivateToken:
+    required: false
+    default: ''
+    description: 'GitHub Private Access Token (PAT) to pull from GitHub.'
   githubToken:
     required: false
     default: ''
@@ -40,12 +48,18 @@ inputs:
     required: false
     default: 'Test Results'
     description: 'Name for the check run that is created when a github token is provided.'
+  chownFilesTo:
+    required: false
+    default: ''
+    description: 'User and optionally group (user or user:group or uid:gid) to give ownership of the resulting build artifacts'
 outputs:
   artifactsPath:
-    description: 'Path where the artifacts are stored'
+    description: 'Path where the artifacts are stored.'
+  coveragePath:
+    description: 'Path where the code coverage results are stored.'
 branding:
   icon: 'box'
   color: 'gray-dark'
 runs:
   using: 'node12'
-  main: 'action/index.js'
+  main: 'dist/index.js'
